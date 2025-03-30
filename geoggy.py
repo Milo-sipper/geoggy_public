@@ -3,7 +3,7 @@ import numpy as np
 import os 
 
 
-geoggy = "/Users/ryanc/downloads/geoggy/geoggy/converted"
+geoggy = "path to folder containing image"
 
 files = os.listdir(geoggy) 
 sorted_files = sorted(files)
