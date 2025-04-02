@@ -1,10 +1,9 @@
-import pandas as pd
+from statsmodels.compat import lzip
 import numpy as np
+import matplotlib.pyplot as plt
 import statsmodels.api as sm
-from statsmodels.multivariate.manova import MANOVA
 from statsmodels.formula.api import ols
-
-
+import pandas as pd 
 
 data = {
     "Area": [1]*8 + [2]*8 + [3]*8 + [4]*8,
@@ -20,12 +19,12 @@ data = {
     0.7, 1.5, 0.8, 0.7, 0.6, 0.9, 2.8, 1.2,
     0.8, 0.4, 0.7, 1.6, 1.2, 0.9, 0.5, 1.0],
 
-    "Albedo": [ 0.482, 0.437, 0.385, 0.426, 0.379, 0.452, 0.450, 0.436,
+    "Albedo":[ 0.482, 0.437, 0.385, 0.426, 0.379, 0.452, 0.450, 0.436,
     0.488, 0.469, 0.449, 0.432, 0.387, 0.453, 0.487, 0.446,
     0.399, 0.357, 0.412, 0.426, 0.412, 0.413, 0.394, 0.450,
     0.494, 0.476, 0.482, 0.479, 0.521, 0.438, 0.320, 0.433],
 
-    "Relative_Humidity":[62.0, 57.3, 58.4, 55.3, 55.4, 50.6, 47.3, 46.6,
+    "Relative_Humidity":[ 62.0, 57.3, 58.4, 55.3, 55.4, 50.6, 47.3, 46.6,
     59.8, 59.0, 60.0, 63.7, 59.8, 60.2, 56.5, 60.2,
     58.7, 59.2, 57.6, 57.8, 60.0, 59.3, 60.9, 58.2,
     53.5, 54.0, 58.0, 54.6, 57.2, 58.2, 57.5, 58.0],
@@ -33,17 +32,13 @@ data = {
 
 
 df = pd.DataFrame(data)
-df.to_csv('./.txt_files/df.txt', sep='\t', index=True)
+X = df[['Albedo', 'Relative_Humidity', 'Windspeed']]  # Independent variables
+X = df[['Albedo']]
+y = df['Temperature'] 
 
+X = sm.add_constant(X)
+model = sm.OLS(y, X).fit()
 
-
-maov = MANOVA.from_formula("Temperature + Windspeed + Albedo + Relative_Humidity ~ Area", data=df)
-results = MANOVA.mv_test(maov)
-for var in ['Temperature', 'Windspeed', 'Albedo', 'Relative_Humidity']:
-    print(f"\n=== ANOVA for {var} ===")
-    model = ols(f"{var} ~ C(Area)", data=df).fit()  # C(Area) treats Area as categorical
-    anova_table = sm.stats.anova_lm(model, typ=2)    # Type 2 ANOVA (standard)
-    print(anova_table)
-results = MANOVA.mv_test(maov)
-
-print(f"\n{results}")
+df['Albedo_squared'] = df['Albedo'] ** 2
+model = sm.OLS(df['Temperature'], sm.add_constant(df[['Albedo', 'Albedo_squared', 'Relative_Humidity', 'Windspeed']])).fit()
+print(model.summary())
